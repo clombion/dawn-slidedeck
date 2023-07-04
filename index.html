@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to Presentation</title>
+    <!-- Reveal.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+
+    <!-- Marked.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.0/marked.min.js"></script>
+
+    <!-- Custom Styles -->
+    <style>
+        body, input, button {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        #settings {
+            background-color: #f9f9f9;
+            padding: 20px;
+            width: 100%;
+            text-align: center;
+            transition: margin-top 1s;
+        }
+
+        #presentation {
+            display: none;
+            transition: margin-top 1s;
+        }
+
+        #hamburger {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            z-index: 1000; /* ensure it's on top of other elements */
+        }
+
+        button {
+            background-color: #f7d7cd;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hamburger -->
+    <div id="hamburger" onclick="toggleSettings()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000000" width="30px" height="30px">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings">
+        <input type="file" id="fileInput" />
+        <button onclick="generatePresentation()">Generate Presentation</button>
+        <br />
+        <label for="urlInput">Or, enter URL: </label>
+        <input type="text" id="urlInput" />
+        <button onclick="loadFromUrl()">Load from URL</button>
+        <br />
+        <label for="cssInput">Custom CSS URL: </label>
+        <input type="text" id="cssInput" />
+        <button onclick="loadCustomCss()">Load Custom CSS</button>
+        <br />
+        <button onclick="hideSettings()">Hide Settings</button>
+    </div>
+
+    <!-- Presentation -->
+    <div class="reveal" id="presentation" style="margin-top: 0;">
+        <div class="slides" id="slides"></div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        async function generatePresentation() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            const text = await file.text();
+            createPresentation(text);
+        }
+
+        async function loadFromUrl() {
+            const url = document.getElementById('urlInput').value;
+            const response = await fetch(url);
+            const text = await response.text();
+            createPresentation(text);
+        }
+
+        function loadCustomCss() {
+            const cssUrl = document.getElementById('cssInput').value;
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssUrl;
+            document.head.appendChild(link);
+        }
+
+        function createPresentation(text) {
+            const slides = text.split('---').map(slideMarkdown => marked.parse(slideMarkdown));
+            const slidesHTML = slides.map(slide => `<section>${slide}</section>`).join('');
+            document.getElementById('slides').innerHTML = slidesHTML;
+            document.getElementById('presentation').style.display = 'block';
+            Reveal.initialize();
+        }
+
+        function hideSettings() {
+            const settings = document.getElementById('settings');
+            const settingsHeight = settings.offsetHeight;
+            settings.style.marginTop = `-${settingsHeight}px`;
+            document.getElementById('hamburger').style.display = 'block';
+        }
+        
+        function toggleSettings() {
+            const settings = document.getElementById('settings');
+            if (parseInt(settings.style.marginTop, 10) < 0) {
+                settings.style.marginTop = '0';
+                document.getElementById('hamburger').style.display = 'none';
+            } else {
+                hideSettings();
+            }
+        }
+    </script>
+</body>
+
+</html>
